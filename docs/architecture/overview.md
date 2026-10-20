@@ -13,6 +13,7 @@ Relay is a real-time messenger built as a polyglot microservices system. The arc
 | **Implemented** | Exists and runs |
 | **Partially implemented** | Some parts exist, others are planned |
 | **Planned** | Documented intent only; no implementation |
+| **Proposed** | A planned integration between components, not yet agreed in detail or implemented |
 
 ## Repositories and components
 
@@ -42,7 +43,8 @@ Exists today:
 Planned, not implemented:
 - User profile creation and lookup, and any other business logic.
 - Validation of ZITADEL-issued tokens and mapping of identities to users. There is no security dependency in the service yet.
-- Message storage.
+- Message history storage in Apache Cassandra. Users, chats, membership and other relational metadata stay in PostgreSQL.
+- Publishing events to Kafka.
 
 ### API Gateway: planned
 
@@ -52,7 +54,8 @@ The single entry point for clients, routing requests to the backend services. Pl
 
 - WebSocket handling for real-time communication
 - Message routing between services
-- Redis for presence tracking and caching (Redis is planned and not deployed)
+- Redis for presence and distributed transient state and caching (Redis is planned and not deployed)
+- Publishing events to Kafka
 
 Planned stack: Go and WebSockets.
 
@@ -72,12 +75,13 @@ The web client. User actions are intended to trigger HTTP and WebSocket requests
 
 | Component | Status | Details |
 |---|---|---|
-| PostgreSQL 16 | **Implemented** (local) | One server with the `relay` database for Core Service data and a separate `zitadel` database and role for ZITADEL. Published on `127.0.0.1:5432` only. |
+| PostgreSQL 16 | **Implemented** (local) | One server with the `relay` database for Core Service data and a separate `zitadel` database and role for ZITADEL. Published on `127.0.0.1:5432` only. Currently holds `users` and `user_identities`; chats, membership and other relational metadata are planned here. |
 | ZITADEL | **Implemented** (local) | Self-hosted identity provider (API and Login UI). It runs locally but is not yet integrated with any Relay service. |
 | Traefik | **Implemented** (local) | Reverse proxy in front of ZITADEL, published on `127.0.0.1:8081` only. It is not an API gateway for Relay services. |
 | Docker Compose | **Implemented** (local) | Local development setup in the `infrastructure` repository. Deployment to other environments is planned. |
 | Kafka | **Planned** | Intended as the asynchronous message broker for event-driven communication. Not deployed and not used by any service. |
-| Redis | **Planned** | Intended for presence tracking, caching and session management. Not deployed and not used by any service. |
+| Apache Cassandra | **Planned** | Intended as the message history database. Not deployed and not used by any service. |
+| Redis | **Planned** | Intended for presence and distributed transient state and caching. It is not a persistent store. Not deployed and not used by any service. |
 
 ## Communication paths
 
@@ -93,10 +97,22 @@ The web client. User actions are intended to trigger HTTP and WebSocket requests
 | AI Service integration with the core messaging system | **Planned** |
 | Frontend sign-in with ZITADEL (OIDC Authorization Code + PKCE) | **Planned** |
 | Core Service validation of ZITADEL tokens | **Planned** |
-| Event streaming through Kafka | **Planned** |
-| Presence tracking and caching through Redis | **Planned** |
+| Core Service to Apache Cassandra (message history) | **Planned** |
+| Core Service to Kafka (event publishing) | **Proposed** |
+| Realtime Gateway to Kafka (event publishing) | **Proposed** |
+| Realtime Gateway to Redis (presence, transient state, caching) | **Planned** |
 
-No other communication path between Relay services is implemented.
+The AI Service is reached through the API Gateway; no other path to it is planned yet. No other communication path between Relay services is implemented.
+
+## Data ownership
+
+| Data | Store | Status |
+|---|---|---|
+| Users, identity links | PostgreSQL | **Implemented** (local) |
+| Chats, membership, relational metadata | PostgreSQL | **Planned** |
+| Message history | Apache Cassandra | **Planned** |
+| Presence, distributed transient state, caches | Redis | **Planned** |
+| Identity provider data | PostgreSQL (`zitadel` database, owned by ZITADEL) | **Implemented** (local) |
 
 ## Intended communication flow
 
@@ -104,10 +120,10 @@ The original design intent, none of which is implemented end to end:
 
 1. User actions in the frontend trigger HTTP and WebSocket requests.
 2. The Realtime Gateway handles real-time WebSocket connections.
-3. The Core Service processes business logic and database operations.
-4. The AI Service provides enhanced features.
+3. The Core Service processes business logic, keeps relational data in PostgreSQL and (planned) message history in Cassandra.
+4. The AI Service provides enhanced features, reached through the API Gateway.
 5. Kafka (planned) facilitates asynchronous event streaming.
-6. Redis (planned) provides fast access to frequently used data.
+6. Redis (planned) holds presence and transient state and provides fast access to frequently used data.
 
 ## Technology decisions
 
