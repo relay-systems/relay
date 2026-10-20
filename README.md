@@ -4,6 +4,12 @@ Relay is a real-time messenger built as a polyglot microservices system. This re
 
 Relay is under early development. Most components are planned and not implemented yet; the table below shows the current status of each repository.
 
+## Target architecture
+
+![Relay target architecture: Frontend, API Gateway, Realtime Gateway, Core Service, AI Service, ZITADEL Identity Platform, PostgreSQL, Cassandra, Kafka and Redis](docs/architecture/relay-architecture.svg)
+
+The diagram shows the **target** system architecture, not the current implementation status. Today only PostgreSQL, ZITADEL (behind a local Traefik reverse proxy) and a partially implemented Core Service exist; the other components are planned. PostgreSQL holds users, chats, membership and relational metadata; Cassandra holds message history. Per-component status and communication paths are in the [architecture overview](docs/architecture/overview.md).
+
 ## Repositories
 
 | Repository | Role | Stack | Status |

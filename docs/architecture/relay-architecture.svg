@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 574" width="1120" height="574" role="img" aria-labelledby="t d">
+  <title id="t">Relay target system architecture</title>
+  <desc id="d">Target architecture. The Frontend signs in through ZITADEL, the Identity Platform, using OIDC Authorization Code with PKCE. ZITADEL is not a proxy: the Frontend connects directly to the API Gateway over HTTP with an access token and to the Realtime Gateway over a two-way WebSocket. Both gateways fetch ZITADEL JWKS and validate JWTs locally. The API Gateway forwards authenticated requests to the Core Service and the AI Service. The Realtime Gateway sends message commands to the Core Service, consumes events from Kafka and uses Redis for presence and transient state. The Core Service applies business authorization and uses PostgreSQL, Cassandra and Kafka. ZITADEL stores its data in PostgreSQL.</desc>
+
+  <!--
+    Hand-composed, editable source of truth for the README diagram. It shows the TARGET architecture,
+    not implementation status; status and message flow live in docs/architecture/overview.md.
+    Grid: columns x=32 (clients), 230 (identity), 420 (gateways), 656 (services), 882 (data).
+    Card heights: 64 standard, 88 for primary components, 60 for compact ones.
+    ZITADEL is NOT a proxy: Frontend -> gateway lines run above and below the ZITADEL card.
+    Z -> PostgreSQL runs through the gap between the gateways; its one hop crosses API Gateway -> Core Service.
+  -->
+
+  <defs>
+    <linearGradient id="card-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#13244a"/>
+      <stop offset="1" stop-color="#0e1b37"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,1 L10,5 L0,9 z" fill="#7cc4f0"/>
+    </marker>
+    <marker id="arrow-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M10,1 L0,5 L10,9 z" fill="#7cc4f0"/>
+    </marker>
+  </defs>
+
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .bg      { fill: #0a1325; stroke: #1b2a47; }
+    .title   { fill: #eaf1ff; font-size: 22px; font-weight: 700; }
+    .sub     { fill: #8ea3c4; font-size: 14px; }
+    .section { fill: #6f86ab; font-size: 12.5px; font-weight: 700; letter-spacing: 1.2px; }
+    .card    { fill: url(#card-fill); stroke: #3f6fae; stroke-width: 1.5; }
+    .name    { fill: #eaf1ff; font-size: 19px; font-weight: 700; }
+    .name-lg { fill: #ffffff; font-size: 22px; font-weight: 700; }
+    .role    { fill: #8ea3c4; font-size: 13.5px; }
+    .role-lg { fill: #9fb2d1; font-size: 14.5px; }
+    .edge    { fill: none; stroke: #7cc4f0; stroke-width: 1.5; marker-end: url(#arrow); }
+    .edge-2way { marker-start: url(#arrow-start); }
+    .step    { fill: #1d4f8a; stroke: #7cc4f0; stroke-width: 1.2; }
+    .step-n  { fill: #ffffff; font-size: 11.5px; font-weight: 700; text-anchor: middle; }
+    .rule    { stroke: #1b2a47; stroke-width: 1; }
+    .flow-h  { fill: #6f86ab; font-size: 12.5px; font-weight: 700; letter-spacing: 1.2px; }
+    .flow-t  { fill: #b4c2db; font-size: 13px; }
+    .edge-label { fill: #b4c2db; font-size: 12.5px; text-anchor: middle; }
+  </style>
+
+  <rect class="bg" x="0.5" y="0.5" width="1119" height="573" rx="16"/>
+
+  <!-- Title -->
+  <text class="title" x="32" y="40">Relay</text>
+  <text class="sub" x="94" y="40">target architecture</text>
+
+  <!-- Section labels -->
+  <text class="section" x="32" y="166">CLIENTS</text>
+  <text class="section" x="230" y="166">IDENTITY</text>
+  <text class="section" x="420" y="76">GATEWAYS</text>
+  <text class="section" x="656" y="76">SERVICES</text>
+  <text class="section" x="882" y="154">DATA STORES</text>
+  <text class="section" x="882" y="380" style="letter-spacing:0.5px;font-size:11.5px">MESSAGING &amp; REALTIME STATE</text>
+
+  <!-- Connectors (drawn first so cards sit on top) -->
+  <!-- 1: Frontend <-> ZITADEL (OIDC sign-in: login and token issuance) -->
+  <path class="edge edge-2way" d="M140,212 H230"/>
+  <text class="edge-label" x="185" y="186">OIDC</text>
+  <text class="edge-label" x="185" y="198">Code + PKCE</text>
+  <circle class="step" cx="185" cy="212" r="9"/><text class="step-n" x="185" y="216">1</text>
+
+  <!-- 2: Frontend -> API Gateway (HTTP + token), routed above ZITADEL -->
+  <path class="edge" d="M120,180 V124 Q120,112 132,112 H420"/>
+  <text class="edge-label" x="270" y="98">HTTP + token</text>
+  <circle class="step" cx="270" cy="112" r="9"/><text class="step-n" x="270" y="116">2</text>
+
+  <!-- Frontend <-> Realtime Gateway (WebSocket, token-authenticated), routed below ZITADEL -->
+  <path class="edge edge-2way" d="M120,244 V290 Q120,302 132,302 H420"/>
+  <text class="edge-label" x="270" y="320">WebSocket</text>
+
+  <!-- 3: both gateways fetch ZITADEL issuer config and JWKS (gateway initiates, cached) -->
+  <path class="edge" d="M420,134 H372 Q360,134 360,146 V180"/>
+  <text class="edge-label" x="342" y="146" style="text-anchor:end">OIDC discovery / JWKS</text>
+  <circle class="step" cx="360" cy="160" r="9"/><text class="step-n" x="360" y="164">3</text>
+  <path class="edge" d="M420,284 H372 Q360,284 360,272 V244"/>
+  <text class="edge-label" x="342" y="272" style="text-anchor:end">OIDC discovery / JWKS</text>
+  <circle class="step" cx="360" cy="262" r="9"/><text class="step-n" x="360" y="266">3</text>
+
+  <!-- ZITADEL -> PostgreSQL (its own zitadel database), through the gap between the gateways -->
+  <path class="edge edge-2way" d="M386,212 H632 a8,8 0 0 1 16,0 H882"/>
+  <text class="edge-label" x="741" y="204">zitadel DB</text>
+
+  <!-- API Gateway -> AI Service, Core Service -->
+  <path class="edge" d="M604,110 H656"/>
+  <path class="edge" d="M604,140 H628 Q640,140 640,152 V258 Q640,270 652,270 H656"/>
+  <circle class="step" cx="640" cy="178" r="9"/><text class="step-n" x="640" y="182">4</text>
+
+  <!-- Realtime Gateway -> Core Service (synchronous message command) -->
+  <path class="edge" d="M604,292 H656"/>
+  <!-- Kafka -> Realtime Gateway (event consumption) -->
+  <path class="edge" d="M882,436 H642 Q630,436 630,424 V320 Q630,308 618,308 H604"/>
+  <!-- Realtime Gateway <-> Redis (presence, transient state) -->
+  <path class="edge edge-2way" d="M604,322 Q618,322 618,334 V500 Q618,512 630,512 H882"/>
+
+  <!-- Core Service -> PostgreSQL (JDBC), Cassandra, Kafka -->
+  <path class="edge edge-2way" d="M826,262 H842 Q854,262 854,250 V248 Q854,236 866,236 H882"/>
+  <text class="edge-label" x="854" y="228">JDBC</text>
+  <path class="edge edge-2way" d="M826,294 H882"/>
+  <path class="edge" d="M826,320 H842 Q854,320 854,332 V392 Q854,404 866,404 H882"/>
+
+  <!-- Clients -->
+  <rect class="card" x="32" y="180" width="108" height="64" rx="10"/>
+  <text class="name" x="44" y="210">Frontend</text>
+  <text class="role" x="44" y="229">Angular</text>
+
+  <!-- Identity (Traefik is a local reverse-proxy detail, documented in overview.md) -->
+  <rect class="card" x="230" y="180" width="156" height="64" rx="10"/>
+  <text class="name" x="244" y="210">ZITADEL</text>
+  <text class="role" x="244" y="229">Login · MFA · OIDC</text>
+
+  <!-- Gateways -->
+  <rect class="card" x="420" y="90" width="184" height="64" rx="10"/>
+  <text class="name" x="434" y="120">API Gateway</text>
+  <text class="role" x="434" y="139">Spring Cloud Gateway</text>
+
+  <rect class="card" x="420" y="270" width="184" height="64" rx="10"/>
+  <text class="name" x="434" y="300">Realtime Gateway</text>
+  <text class="role" x="434" y="319">Go · WebSockets</text>
+
+  <!-- Services -->
+  <rect class="card" x="656" y="90" width="170" height="64" rx="10"/>
+  <text class="name" x="670" y="120">AI Service</text>
+  <text class="role" x="670" y="139">Python · FastAPI</text>
+
+  <rect class="card" x="656" y="250" width="170" height="88" rx="12"/>
+  <text class="name-lg" x="672" y="289">Core Service</text>
+  <text class="role-lg" x="672" y="313">Java 21 · Spring Boot</text>
+  <circle class="step" cx="808" cy="250" r="9"/><text class="step-n" x="808" y="254">5</text>
+
+  <!-- Data stores (equal prominence) -->
+  <rect class="card" x="882" y="168" width="206" height="88" rx="12"/>
+  <text class="name-lg" x="900" y="207">PostgreSQL</text>
+  <text class="role-lg" x="900" y="231">Relational data</text>
+
+  <rect class="card" x="882" y="274" width="206" height="88" rx="12"/>
+  <text class="name-lg" x="900" y="313">Cassandra</text>
+  <text class="role-lg" x="900" y="337">Message history</text>
+
+  <!-- Messaging and realtime state -->
+  <rect class="card" x="882" y="390" width="206" height="60" rx="10"/>
+  <text class="name" x="900" y="418">Kafka</text>
+  <text class="role" x="900" y="437">Event streaming</text>
+
+  <rect class="card" x="882" y="482" width="206" height="60" rx="10"/>
+  <text class="name" x="900" y="510">Redis</text>
+  <text class="role" x="900" y="529">Presence · transient state</text>
+
+  <!-- Authentication flow legend -->
+  <text class="flow-h" x="32" y="410">AUTHENTICATION FLOW</text>
+  <circle class="step" cx="41" cy="434" r="9"/><text class="step-n" x="41" y="438">1</text>
+  <text class="flow-t" x="58" y="438">Sign in with ZITADEL: login, MFA and token issuance</text>
+  <circle class="step" cx="41" cy="460" r="9"/><text class="step-n" x="41" y="464">2</text>
+  <text class="flow-t" x="58" y="464">Frontend sends the access token directly to the gateways</text>
+  <circle class="step" cx="41" cy="486" r="9"/><text class="step-n" x="41" y="490">3</text>
+  <text class="flow-t" x="58" y="490">Both gateways cache ZITADEL JWKS and validate JWTs locally</text>
+  <circle class="step" cx="41" cy="512" r="9"/><text class="step-n" x="41" y="516">4</text>
+  <text class="flow-t" x="58" y="516">Gateways pass authenticated requests to Core Service</text>
+  <circle class="step" cx="41" cy="538" r="9"/><text class="step-n" x="41" y="542">5</text>
+  <text class="flow-t" x="58" y="542">Core Service applies business-level authorization</text>
+</svg>
