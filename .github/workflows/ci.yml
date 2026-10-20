@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - 'TASK_*'
+  pull_request:
+    branches:
+      - test
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required files
+        run: |
+          missing=0
+          for f in README.md .gitignore docs/architecture/overview.md; do
+            [ -f "$f" ] || { echo "Missing required file: $f"; missing=1; }
+          done
+          exit $missing
+
+      - name: Validate relative Markdown links
+        shell: bash
+        run: |
+          status=0
+          while IFS= read -r f; do
+            dir=$(dirname "$f")
+            while IFS= read -r link; do
+              case "$link" in http://*|https://*|mailto:*|\#*) continue;; esac
+              target="${link%%#*}"
+              [ -z "$target" ] && continue
+              case "$target" in /*) path=".$target";; *) path="$dir/$target";; esac
+              [ -e "$path" ] || { echo "Broken link in $f: $link"; status=1; }
+            done < <(grep -oE '\]\([^)[:space:]]+\)' "$f" | sed -E 's/^\]\((.*)\)$/\1/')
+          done < <(git ls-files '*.md')
+          exit $status
+
+      - name: No secret-looking files are tracked
+        run: |
+          bad=$(git ls-files | grep -E '(^|/)\.env($|\.)|\.(pem|key|p12|pfx|jks)$|(^|/)id_(rsa|ed25519)' | grep -vE '(^|/)\.env\.[A-Za-z0-9_-]*example$' || true)
+          if [ -n "$bad" ]; then
+            echo "Tracked files that look like secrets:"
+            echo "$bad"
+            exit 1
+          fi
