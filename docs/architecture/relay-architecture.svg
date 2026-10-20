@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 630" width="1120" height="630" role="img" aria-labelledby="t d">
+  <title id="t">Relay system architecture</title>
+  <desc id="d">Frontend reaches the API Gateway and Realtime Gateway, which front the Core Service and AI Service. Core Service uses PostgreSQL today and Cassandra and Kafka in the plan. Realtime Gateway uses Kafka and Redis. ZITADEL and Traefik provide local identity infrastructure.</desc>
+
+  <!--
+    Hand-composed, editable source of truth for the README diagram.
+    Grid: columns x=32 (clients), 300 (gateways), 580 (services), 850 (data); card height 64 (88 prominent, 60 compact).
+    Status: solid border + IMPLEMENTED badge, dash-dot border + PARTIAL badge, dashed border + PLANNED badge.
+    Connectors: solid cyan = verified, dashed grey = proposed. Keep ports on separate y values so lines never overlap.
+  -->
+
+  <defs>
+    <linearGradient id="hero" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#162b52"/>
+      <stop offset="1" stop-color="#0d1a33"/>
+    </linearGradient>
+    <marker id="arrow-solid" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,1 L10,5 L0,9 z" fill="#7dd3fc"/>
+    </marker>
+    <marker id="arrow-dash" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0,1 L10,5 L0,9 z" fill="#8da2c0"/>
+    </marker>
+  </defs>
+
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .bg      { fill: #0a1325; stroke: #1b2a47; }
+    .title   { fill: #eaf1ff; font-size: 22px; font-weight: 700; }
+    .sub     { fill: #8ea3c4; font-size: 14px; }
+    .section { fill: #6f86ab; font-size: 12.5px; font-weight: 700; letter-spacing: 1.2px; }
+    .card    { fill: #0f1c36; stroke-width: 1.5; }
+    .hero    { fill: url(#hero); stroke-width: 2; }
+    .name    { fill: #eaf1ff; font-size: 19px; font-weight: 700; }
+    .name-lg { fill: #ffffff; font-size: 22px; font-weight: 700; }
+    .role    { fill: #8ea3c4; font-size: 13.5px; }
+    .role-lg { fill: #9fb2d1; font-size: 14.5px; }
+    .done    { stroke: #38bdf8; }
+    .part    { stroke: #60a5fa; stroke-dasharray: 8 4 2 4; }
+    .plan    { stroke: #526282; stroke-dasharray: 5 4; }
+    .plan-lg { stroke: #7285a8; stroke-dasharray: 6 4; }
+    .badge-done { fill: #08283d; stroke: #38bdf8; }
+    .badge-part { fill: #0e2147; stroke: #60a5fa; stroke-dasharray: 3 2; }
+    .badge-plan { fill: #0f1a30; stroke: #526282; }
+    .badge-text { font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-anchor: middle; }
+    .t-done { fill: #7dd3fc; } .t-part { fill: #93c5fd; } .t-plan { fill: #9aa9c4; }
+    .edge-ok  { fill: none; stroke: #7dd3fc; stroke-width: 1.6; marker-end: url(#arrow-solid); }
+    .edge-plan{ fill: none; stroke: #8da2c0; stroke-width: 1.4; stroke-dasharray: 6 5; marker-end: url(#arrow-dash); }
+    .edge-label { fill: #b4c2db; font-size: 12.5px; text-anchor: middle; }
+    .legend   { fill: #8ea3c4; font-size: 13px; }
+  </style>
+
+  <rect class="bg" x="0.5" y="0.5" width="1119" height="629" rx="16"/>
+
+  <!-- Title and legend -->
+  <text class="title" x="32" y="40">Relay</text>
+  <text class="sub" x="94" y="40">system architecture</text>
+  <path class="edge-ok" d="M690,35 H724" style="marker-end:none"/>
+  <text class="legend" x="732" y="40">Verified</text>
+  <path class="edge-plan" d="M820,35 H854" style="marker-end:none"/>
+  <text class="legend" x="862" y="40">Proposed</text>
+
+  <!-- Section labels -->
+  <text class="section" x="300" y="76">IDENTITY</text>
+  <text class="section" x="32" y="196">CLIENTS</text>
+  <text class="section" x="300" y="196">GATEWAYS</text>
+  <text class="section" x="580" y="196">SERVICES</text>
+  <text class="section" x="850" y="196">DATA STORES</text>
+  <text class="section" x="850" y="446">MESSAGING &amp; REALTIME STATE</text>
+
+  <!-- Connectors (drawn first so cards sit on top) -->
+  <!-- Frontend -> Traefik (planned OIDC sign-in), API Gateway, Realtime Gateway -->
+  <path class="edge-plan" d="M112,226 V140 Q112,128 124,128 H300"/>
+  <text class="edge-label" x="250" y="120">OIDC</text>
+  <path class="edge-plan" d="M192,258 H300"/>
+  <text class="edge-label" x="246" y="250">HTTP</text>
+  <path class="edge-plan" d="M112,290 V524 Q112,536 124,536 H300"/>
+  <text class="edge-label" x="250" y="528">WebSocket</text>
+
+  <!-- Identity: Traefik -> ZITADEL -> PostgreSQL (verified) -->
+  <path class="edge-ok" d="M500,128 H580"/>
+  <text class="edge-label" x="540" y="120">HTTP</text>
+  <path class="edge-ok" d="M780,128 H1018 Q1030,128 1030,140 V214"/>
+  <text class="edge-label" x="905" y="120">zitadel DB</text>
+
+  <!-- API Gateway -> Core Service, AI Service (planned) -->
+  <path class="edge-plan" d="M500,258 H580"/>
+  <path class="edge-plan" d="M400,290 V356 Q400,368 412,368 H580"/>
+
+  <!-- Core Service -> PostgreSQL (verified), Cassandra and Kafka (planned / proposed) -->
+  <path class="edge-ok" d="M780,240 H850"/>
+  <text class="edge-label" x="815" y="232">JDBC</text>
+  <path class="edge-plan" d="M780,270 H813 Q825,270 825,282 V368 Q825,380 837,380 H850"/>
+  <path class="edge-plan" d="M780,284 H793 Q805,284 805,296 V472 Q805,484 817,484 H850"/>
+
+  <!-- Realtime Gateway -> Kafka (proposed), Redis (planned) -->
+  <path class="edge-plan" d="M500,536 H528 Q540,536 540,524 V520 Q540,508 552,508 H850"/>
+  <path class="edge-plan" d="M500,536 H528 Q540,536 540,548 V564 Q540,576 552,576 H850"/>
+
+  <!-- Cards: Clients -->
+  <rect class="card plan" x="32" y="226" width="160" height="64" rx="10"/>
+  <text class="name" x="48" y="258">Frontend</text>
+  <text class="role" x="48" y="278">Angular</text>
+  <rect class="badge-plan" x="44" y="216" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="81" y="230">PLANNED</text>
+
+  <!-- Cards: Identity -->
+  <rect class="card done" x="300" y="96" width="200" height="64" rx="10"/>
+  <text class="name" x="316" y="128">Traefik</text>
+  <text class="role" x="316" y="148">Local ZITADEL proxy</text>
+  <rect class="badge-done" x="312" y="86" width="104" height="20" rx="10"/>
+  <text class="badge-text t-done" x="364" y="100">IMPLEMENTED</text>
+
+  <rect class="card done" x="580" y="96" width="200" height="64" rx="10"/>
+  <text class="name" x="596" y="128">ZITADEL</text>
+  <text class="role" x="596" y="148">Identity provider</text>
+  <rect class="badge-done" x="592" y="86" width="104" height="20" rx="10"/>
+  <text class="badge-text t-done" x="644" y="100">IMPLEMENTED</text>
+
+  <!-- Cards: Gateways -->
+  <rect class="card plan" x="300" y="226" width="200" height="64" rx="10"/>
+  <text class="name" x="316" y="258">API Gateway</text>
+  <text class="role" x="316" y="278">Spring Cloud Gateway</text>
+  <rect class="badge-plan" x="312" y="216" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="349" y="230">PLANNED</text>
+
+  <rect class="card plan" x="300" y="504" width="200" height="64" rx="10"/>
+  <text class="name" x="316" y="536">Realtime Gateway</text>
+  <text class="role" x="316" y="556">Go · WebSockets</text>
+  <rect class="badge-plan" x="312" y="494" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="349" y="508">PLANNED</text>
+
+  <!-- Cards: Services -->
+  <rect class="hero part" x="580" y="214" width="200" height="88" rx="12"/>
+  <text class="name-lg" x="598" y="258">Core Service</text>
+  <text class="role-lg" x="598" y="281">Java 21 · Spring Boot</text>
+  <rect class="badge-part" x="594" y="204" width="74" height="20" rx="10"/>
+  <text class="badge-text t-part" x="631" y="218">PARTIAL</text>
+
+  <rect class="card plan" x="580" y="336" width="200" height="64" rx="10"/>
+  <text class="name" x="596" y="368">AI Service</text>
+  <text class="role" x="596" y="388">Python · FastAPI</text>
+  <rect class="badge-plan" x="592" y="326" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="629" y="340">PLANNED</text>
+
+  <!-- Cards: Data stores (equal prominence) -->
+  <rect class="hero done" x="850" y="214" width="238" height="88" rx="12"/>
+  <text class="name-lg" x="868" y="258">PostgreSQL</text>
+  <text class="role-lg" x="868" y="281">Relational data</text>
+  <rect class="badge-done" x="864" y="204" width="104" height="20" rx="10"/>
+  <text class="badge-text t-done" x="916" y="218">IMPLEMENTED</text>
+
+  <rect class="hero plan-lg" x="850" y="336" width="238" height="88" rx="12"/>
+  <text class="name-lg" x="868" y="380">Cassandra</text>
+  <text class="role-lg" x="868" y="403">Message history</text>
+  <rect class="badge-plan" x="864" y="326" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="901" y="340">PLANNED</text>
+
+  <!-- Cards: Messaging and realtime state -->
+  <rect class="card plan" x="850" y="466" width="238" height="60" rx="10"/>
+  <text class="name" x="868" y="496">Kafka</text>
+  <text class="role" x="868" y="515">Event streaming</text>
+  <rect class="badge-plan" x="864" y="456" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="901" y="470">PLANNED</text>
+
+  <rect class="card plan" x="850" y="546" width="238" height="60" rx="10"/>
+  <text class="name" x="868" y="576">Redis</text>
+  <text class="role" x="868" y="595">Presence · transient state</text>
+  <rect class="badge-plan" x="864" y="536" width="74" height="20" rx="10"/>
+  <text class="badge-text t-plan" x="901" y="550">PLANNED</text>
+</svg>

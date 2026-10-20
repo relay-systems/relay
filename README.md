@@ -6,65 +6,15 @@ Relay is under early development. Most components are planned and not implemente
 
 ## Architecture
 
-```mermaid
-flowchart TB
-  subgraph clients["Clients"]
-    FE["<b>Frontend</b><br/>Angular · TypeScript<br/>○ Planned"]
-  end
-
-  subgraph gateways["Gateways"]
-    RTGW["<b>Realtime Gateway</b><br/>Go · WebSockets<br/>○ Planned"]
-    APIGW["<b>API Gateway</b><br/>Spring Cloud Gateway<br/>○ Planned"]
-  end
-
-  subgraph services["Services"]
-    AI["<b>AI Service</b><br/>Python · FastAPI<br/>○ Planned"]
-    CORE["<b>Core Service</b><br/>Java 21 · Spring Boot<br/>◐ Partial: users, identities"]
-  end
-
-  subgraph infra["Infrastructure"]
-    REDIS[("<b>Redis</b><br/>Presence, transient state, cache<br/>○ Planned")]
-    KAFKA(["<b>Kafka</b><br/>Async events<br/>○ Planned"])
-    CAS[("<b>Apache Cassandra</b><br/>Message history<br/>○ Planned")]
-    PG[("<b>PostgreSQL 16</b><br/>Users, chats, membership,<br/>relational metadata<br/>● Implemented (local)")]
-    TR["<b>Traefik</b><br/>Local ZITADEL proxy<br/>● Implemented (local)"]
-    IDP["<b>ZITADEL</b><br/>Identity provider<br/>● Implemented (local)"]
-  end
-
-  FE -.->|WebSocket| RTGW
-  FE -.->|HTTP| APIGW
-  FE -.->|"OIDC · Auth Code + PKCE"| TR
-  APIGW -.-> AI
-  APIGW -.-> CORE
-  RTGW -.-> REDIS
-  RTGW -.-> KAFKA
-  CORE -.-> KAFKA
-  CORE -.-> CAS
-  CORE -->|JDBC| PG
-  TR -->|HTTP| IDP
-  IDP -->|"zitadel DB"| PG
-  CORE ~~~ REDIS
-
-  classDef done fill:#dbeafe,stroke:#1d4ed8,stroke-width:2px,color:#0f172a;
-  classDef partial fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,stroke-dasharray:6 3,color:#0f172a;
-  classDef planned fill:#f1f5f9,stroke:#64748b,stroke-width:1.5px,stroke-dasharray:4 4,color:#334155;
-  class TR,IDP,PG done;
-  class CORE partial;
-  class FE,APIGW,RTGW,AI,CAS,REDIS,KAFKA planned;
-
-  style clients fill:none,stroke:#94a3b8
-  style gateways fill:none,stroke:#94a3b8
-  style services fill:none,stroke:#94a3b8
-  style infra fill:none,stroke:#94a3b8
-```
+![Relay system architecture: Frontend, API Gateway, Realtime Gateway, Core Service, AI Service, ZITADEL, PostgreSQL, Cassandra, Kafka and Redis, with implemented, partial and planned components marked](docs/architecture/relay-architecture.svg)
 
 **Legend**
 
 | Marker | Meaning |
 |---|---|
-| ● solid blue border | Implemented (local development only) |
-| ◐ dashed blue border | Partially implemented |
-| ○ dashed gray border | Planned |
+| IMPLEMENTED badge, solid border | Exists and runs (local development only) |
+| PARTIAL badge, dash-dot border | Partially implemented |
+| PLANNED badge, dashed border | Planned, not implemented |
 | Solid arrow | Verified, currently implemented integration |
 | Dashed arrow | Proposed integration, not implemented |
 
